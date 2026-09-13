@@ -1,0 +1,26 @@
+(A) 2026-09-09 Scaffold lakebridge project with lib.rs plus main.rs and add core crates +lakebridge @setup
+(A) 2026-09-09 Define orders Schema and build a RecordBatch by hand with Arrow builders +lakebridge @arrow
+(A) 2026-09-09 Write a unit test asserting the null bitmap on a nullable amount column +lakebridge @arrow @tests
+(A) 2026-09-09 Implement write_batches_to_parquet with ArrowWriter and WriterProperties +lakebridge @parquet
+(A) 2026-09-09 Implement read_parquet_to_batches and a round-trip test +lakebridge @parquet @tests
+(B) 2026-09-09 Inspect row group statistics and compare file size across compression codecs +lakebridge @parquet
+(A) 2026-09-09 Register orders_archive as a Parquet table and run a first SQL query +lakebridge @datafusion
+(A) 2026-09-09 Run EXPLAIN ANALYZE and confirm predicate pushdown on a filtered query +lakebridge @datafusion
+(B) 2026-09-09 Switch to ListingTable with Hive-style year and month partitioning +lakebridge @datafusion
+(A) 2026-09-09 Stand up local Postgres and create the orders table with seed data +lakebridge @postgres
+(A) 2026-09-09 Connect with tokio-postgres and confirm the Connection future is spawned +lakebridge @postgres
+(A) 2026-09-09 Design the Postgres to Arrow type mapping decisions for NUMERIC and TIMESTAMPTZ +lakebridge @postgres @arrow
+(A) 2026-09-09 Implement rows_to_batch and write null and timezone round-trip tests +lakebridge @postgres @tests
+(B) 2026-09-09 Implement the Hive-style partitioned archive writer keyed by year and month +lakebridge @postgres @parquet
+(A) 2026-09-09 Implement PostgresTableProvider skeleton with schema and table_type +lakebridge @datafusion @postgres
+(A) 2026-09-09 Implement first-pass scan using MemoryExec and a naive select all query +lakebridge @datafusion @postgres
+(A) 2026-09-09 Register orders_archive and orders_live together and run a union all query +lakebridge @datafusion
+(B) 2026-09-09 Instrument scan with timestamps and confirm whether sources execute concurrently +lakebridge @datafusion
+(B) 2026-09-09 Build the clap CLI skeleton with sync query and repl subcommands +lakebridge @cli
+(B) 2026-09-09 Wire a create view orders as union of archive and live tables +lakebridge @cli @datafusion
+(B) 2026-09-09 Set up a tests directory with assert_batches_eq integration tests +lakebridge @tests
+(C) 2026-09-09 Implement supports_filters_pushdown for status equality as exact and test correctness +lakebridge @datafusion @postgres @tests
+(C) 2026-09-09 Replace MemoryExec with a real streaming ExecutionPlan using query_raw +lakebridge @datafusion @postgres
+(C) 2026-09-09 Add a testcontainers-based Postgres integration test suite +lakebridge @tests @postgres
+(C) 2026-09-09 Add integration tests for the CLI query subcommand +lakebridge @cli @tests
+(C) 2026-09-09 Wire cargo fmt clippy and test into CI +lakebridge @tests
