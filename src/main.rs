@@ -1,7 +1,7 @@
-mod parquet;
-mod read_parquet;
-mod datafusion;
-
+mod parquet_writer;
+mod parquet_reader;
+mod listing;
+mod registry;
 
 use arrow::array::{Float64Builder, Int64Builder, StringBuilder};
 use arrow::datatypes::{DataType, Field, Schema};

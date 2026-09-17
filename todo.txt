@@ -1,26 +1,86 @@
-(A) 2026-09-09 Scaffold lakebridge project with lib.rs plus main.rs and add core crates +lakebridge @setup
-(A) 2026-09-09 Define orders Schema and build a RecordBatch by hand with Arrow builders +lakebridge @arrow
-(A) 2026-09-09 Write a unit test asserting the null bitmap on a nullable amount column +lakebridge @arrow @tests
-(A) 2026-09-09 Implement write_batches_to_parquet with ArrowWriter and WriterProperties +lakebridge @parquet
-(A) 2026-09-09 Implement read_parquet_to_batches and a round-trip test +lakebridge @parquet @tests
-(B) 2026-09-09 Inspect row group statistics and compare file size across compression codecs +lakebridge @parquet
-(A) 2026-09-09 Register orders_archive as a Parquet table and run a first SQL query +lakebridge @datafusion
-(A) 2026-09-09 Run EXPLAIN ANALYZE and confirm predicate pushdown on a filtered query +lakebridge @datafusion
-(B) 2026-09-09 Switch to ListingTable with Hive-style year and month partitioning +lakebridge @datafusion
-(A) 2026-09-09 Stand up local Postgres and create the orders table with seed data +lakebridge @postgres
-(A) 2026-09-09 Connect with tokio-postgres and confirm the Connection future is spawned +lakebridge @postgres
-(A) 2026-09-09 Design the Postgres to Arrow type mapping decisions for NUMERIC and TIMESTAMPTZ +lakebridge @postgres @arrow
-(A) 2026-09-09 Implement rows_to_batch and write null and timezone round-trip tests +lakebridge @postgres @tests
-(B) 2026-09-09 Implement the Hive-style partitioned archive writer keyed by year and month +lakebridge @postgres @parquet
-(A) 2026-09-09 Implement PostgresTableProvider skeleton with schema and table_type +lakebridge @datafusion @postgres
-(A) 2026-09-09 Implement first-pass scan using MemoryExec and a naive select all query +lakebridge @datafusion @postgres
-(A) 2026-09-09 Register orders_archive and orders_live together and run a union all query +lakebridge @datafusion
-(B) 2026-09-09 Instrument scan with timestamps and confirm whether sources execute concurrently +lakebridge @datafusion
-(B) 2026-09-09 Build the clap CLI skeleton with sync query and repl subcommands +lakebridge @cli
-(B) 2026-09-09 Wire a create view orders as union of archive and live tables +lakebridge @cli @datafusion
-(B) 2026-09-09 Set up a tests directory with assert_batches_eq integration tests +lakebridge @tests
-(C) 2026-09-09 Implement supports_filters_pushdown for status equality as exact and test correctness +lakebridge @datafusion @postgres @tests
-(C) 2026-09-09 Replace MemoryExec with a real streaming ExecutionPlan using query_raw +lakebridge @datafusion @postgres
-(C) 2026-09-09 Add a testcontainers-based Postgres integration test suite +lakebridge @tests @postgres
-(C) 2026-09-09 Add integration tests for the CLI query subcommand +lakebridge @cli @tests
-(C) 2026-09-09 Wire cargo fmt clippy and test into CI +lakebridge @tests
+# LAKEBRIDGE TODO — Tuxedo format
+# x = done  (A) = priority A  (B) = priority B  (C) = priority C
+# src: = file to create/edit   tests: = test file   docs: = doc file
+
+# ── PHASE 1: Arrow + Parquet (existing code, needs cleanup) ──────────────────
+
+x 2026-09-16 2026-09-09 Define orders_schema() and build_batch() with typed Arrow builders +lakebridge @arrow src:src/arrow/schema.rs
+x 2026-09-16 2026-09-09 Write unit test asserting null bitmap on nullable amount column +lakebridge @arrow @tests tests:tests/arrow.rs
+x 2026-09-16 2026-09-09 Implement write_batches_to_parquet with ArrowWriter ZSTD and row group size +lakebridge @parquet src:src/archive/parquet_writer.rs
+x 2026-09-16 2026-09-09 Implement read_parquet_to_batches and round-trip write-then-read test +lakebridge @parquet @tests src:src/archive/parquet_reader.rs tests:tests/parquet.rs
+(B) 2026-09-09 Add inspect_statistics() to read min/max/null_count per row group without reading data +lakebridge @parquet src:src/archive/parquet_reader.rs
+(B) 2026-09-09 Benchmark ZSTD vs Snappy vs None compression: file size and read throughput +lakebridge @parquet benches:benches/parquet_io.rs
+
+# ── PHASE 2: DataFusion over Parquet (existing code, needs cleanup) ───────────
+
+x 2026-09-16 2026-09-09 Register single Parquet file as DataFusion table and run first SQL query +lakebridge @datafusion src:src/datafusion/registry.rs
+x 2026-09-16 2026-09-09 Run EXPLAIN ANALYZE and read the ParquetExec node to confirm predicate pushdown +lakebridge @datafusion src:src/datafusion/registry.rs
+(B) 2026-09-09 Switch to ListingTable with Hive-style year=X/month=Y partitioning and infer_schema +lakebridge @datafusion src:src/datafusion/listing.rs
+(B) 2026-09-09 Enable with_schema_merge(true) on ListingOptions to handle future schema evolution +lakebridge @datafusion src:src/datafusion/listing.rs
+
+# ── PHASE 3: datafusion-table-providers integration (the key new phase) ───────
+
+(A) 2026-09-09 Add datafusion-table-providers 0.13.1 with postgres feature to Cargo.toml +lakebridge @setup src:Cargo.toml
+(A) 2026-09-09 Add datafusion-federation 0.5 to Cargo.toml for federated SessionContext +lakebridge @setup src:Cargo.toml
+(A) 2026-09-09 Verify datafusion = 54.0 and arrow = 58.0 across all deps to avoid type mismatches +lakebridge @setup src:Cargo.toml
+(A) 2026-09-09 Implement build_postgres_pool() using PostgresConnectionPool and to_secret_map +lakebridge @postgres src:src/postgres/context.rs
+(A) 2026-09-09 Implement register_live_table() using PostgresTableFactory.table_provider() +lakebridge @postgres src:src/postgres/context.rs
+(A) 2026-09-09 Implement build_full_context() with default_session_state() for federation +lakebridge @datafusion src:src/datafusion/context.rs
+(A) 2026-09-09 Register orders_archive and orders_live in same context and run UNION ALL query +lakebridge @datafusion src:src/datafusion/context.rs
+(A) 2026-09-09 Create the logical view: CREATE VIEW orders AS SELECT * FROM archive UNION ALL live +lakebridge @datafusion src:src/datafusion/context.rs
+(B) 2026-09-09 Instrument UNION ALL query with timestamps: confirm archive and live scans run concurrently +lakebridge @datafusion src:src/datafusion/context.rs
+(B) 2026-09-09 Run EXPLAIN on orders_live filter query and assert no FilterExec above PostgresSqlExec +lakebridge @datafusion @tests tests:tests/federation.rs
+
+# ── PHASE 3b: Postgres seed data and local dev setup ────────────────────────
+
+(A) 2026-09-09 Write fixtures/seed.sql: CREATE TABLE orders with archived bool column + 10k rows +lakebridge @postgres src:fixtures/seed.sql
+(A) 2026-09-09 Stand up local Postgres via Docker and run seed.sql to verify schema +lakebridge @postgres
+(A) 2026-09-09 Connect with tokio-postgres directly (not via crate) for the sync write path +lakebridge @postgres src:src/postgres/context.rs
+(A) 2026-09-09 Confirm the Connection future is spawned on tokio::spawn and drives the connection +lakebridge @postgres src:src/postgres/context.rs
+
+# ── PHASE 4: Archive layer ─────────────────────────────────────────────────
+
+(A) 2026-09-09 Implement partition_path(created_at_micros) returning archive/year=X/month=Y +lakebridge @archive src:src/archive/partition.rs
+(A) 2026-09-09 Implement group_by_partition() to split rows into per-partition buckets +lakebridge @archive src:src/archive/partition.rs
+(A) 2026-09-09 Implement safe atomic write: write to .parquet.tmp then rename to .parquet +lakebridge @archive src:src/archive/partition.rs
+(A) 2026-09-09 Implement verify_parquet(): read back file and assert row count matches source +lakebridge @archive src:src/archive/parquet_reader.rs
+(B) 2026-09-09 Implement ManifestEntry struct with file_path row_count sha256_hex archived_ids +lakebridge @archive src:src/archive/manifest.rs
+(B) 2026-09-09 Implement compute_sha256() for Parquet files using sha2 crate +lakebridge @archive src:src/archive/manifest.rs
+(B) 2026-09-09 Implement write_manifest_entry() appending JSON to archive/manifest.ndjson +lakebridge @archive src:src/archive/manifest.rs
+(B) 2026-09-09 Add SELECT ... FOR UPDATE locking to prevent concurrent sync runs double-archiving +lakebridge @archive src:src/cli/sync.rs
+(B) 2026-09-09 After verified Parquet write: UPDATE orders SET archived = true WHERE order_id IN (...) +lakebridge @archive src:src/cli/sync.rs
+(C) 2026-09-09 Optional cleanup step: DELETE FROM orders WHERE archived = true AND created_at < cutoff +lakebridge @archive src:src/cli/sync.rs
+(C) 2026-09-09 Handle existing partition file: read + merge + rewrite rather than overwrite +lakebridge @archive src:src/archive/partition.rs
+
+# ── PHASE 5: CLI ─────────────────────────────────────────────────────────────
+
+(B) 2026-09-09 Build clap CLI skeleton: Cli struct with sync and query subcommands +lakebridge @cli src:src/cli/mod.rs
+(B) 2026-09-09 Implement SyncArgs: --table --older-than --dsn --batch-size --dry-run +lakebridge @cli src:src/cli/sync.rs
+(B) 2026-09-09 Implement run_sync(): connect tokio-postgres, archive rows per partition, update archived +lakebridge @cli src:src/cli/sync.rs
+(B) 2026-09-09 Implement QueryArgs: positional SQL string, optional --dsn, optional --archive-dir +lakebridge @cli src:src/cli/query.rs
+(B) 2026-09-09 Implement run_query(): build_full_context(), ctx.sql(), df.show() +lakebridge @cli src:src/cli/query.rs
+(C) 2026-09-09 Add --explain flag to run_query(): print EXPLAIN ANALYZE output +lakebridge @cli src:src/cli/query.rs
+(C) 2026-09-09 Add --output csv|table|json flag to run_query() +lakebridge @cli src:src/cli/query.rs
+
+# ── PHASE 6: Type mapping (for the sync path using tokio-postgres directly) ──
+
+(A) 2026-09-09 Document NUMERIC → Decimal128(38,10) decision in docs/type_mapping.md +lakebridge @postgres @docs docs:docs/type_mapping.md
+(A) 2026-09-09 Document TIMESTAMPTZ → Timestamp(Microsecond, UTC) conversion from chrono::DateTime<Utc> +lakebridge @postgres @docs docs:docs/type_mapping.md
+(B) 2026-09-09 Write null and timezone round-trip test: Postgres row → Arrow batch → Parquet → read back +lakebridge @postgres @tests tests:tests/parquet.rs
+
+# ── PHASE 7: Testing ─────────────────────────────────────────────────────────
+
+(A) 2026-09-09 Add testcontainers and testcontainers-modules postgres to dev-dependencies +lakebridge @tests src:Cargo.toml
+(A) 2026-09-09 Write testcontainers integration test: start Postgres, seed data, register_live_table +lakebridge @postgres @tests tests:tests/postgres.rs
+(A) 2026-09-09 Write federation correctness test: same SQL over PG-only vs PG+Parquet gives same result +lakebridge @tests tests:tests/federation.rs
+(B) 2026-09-09 Write assert_batches_eq test for UNION ALL result against known expected values +lakebridge @tests tests:tests/federation.rs
+(B) 2026-09-09 Write archive safety test: simulate crash after Parquet write, verify no data loss +lakebridge @tests tests:tests/parquet.rs
+(C) 2026-09-09 Add testcontainers integration tests for the CLI sync subcommand end-to-end +lakebridge @cli @tests tests:tests/federation.rs
+(C) 2026-09-09 Wire cargo fmt clippy test and deny into CI (GitHub Actions) +lakebridge @tests
+
+# ── PHASE 8: Docs and polish ─────────────────────────────────────────────────
+
+(B) 2026-09-09 Write docs/architecture.md with ASCII diagrams and EXPLAIN ANALYZE output walkthrough +lakebridge @docs docs:docs/architecture.md
+(B) 2026-09-09 Write docs/type_mapping.md with full Postgres to Arrow to Parquet type table +lakebridge @docs docs:docs/type_mapping.md
+(C) 2026-09-09 Add criterion benchmarks: write throughput rows/sec, read throughput, predicate pruning speedup +lakebridge @parquet benches:benches/parquet_io.rs
+(C) 2026-09-09 Write examples/basic_archive.rs: full end-to-end demo without CLI flags for easy reading +lakebridge docs:examples/basic_archive.rs
